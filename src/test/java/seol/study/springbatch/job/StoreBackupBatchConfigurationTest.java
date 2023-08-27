@@ -38,7 +38,7 @@ class StoreBackupBatchConfigurationTest {
 
     @Test
     @DisplayName("Store 정보가 StoreHistory로 복사된다")
-    void save() throws Exception {
+    void storeBackupBatch() throws Exception {
         // given:
         storeRepository.deleteAll();
 
@@ -73,7 +73,7 @@ class StoreBackupBatchConfigurationTest {
 
     @Test
     @DisplayName("Chunk 단위로 롤백된다")
-    void rollback() throws Exception {
+    void chunkRollback() throws Exception {
         // given:
         storeRepository.deleteAll();
 
