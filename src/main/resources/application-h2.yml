@@ -1,0 +1,12 @@
+spring:
+  batch:
+    jdbc:
+      initialize-schema: embedded # 내장DB일때 스키마 자동 생성.
+  datasource:
+    username: sa
+    driver-class-name: org.h2.Driver
+  jpa:
+    database: H2
+  h2:
+    console:
+      enabled: true
