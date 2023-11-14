@@ -1,5 +1,6 @@
 package seol.study.springbatch.job;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ public class N1JpaPaging2JobConfig {
     private final StepBuilderFactory stepBuilderFactory;
     private final EntityManagerFactory entityManagerFactory;
     private final StoreWriteService storeWriteService;
+    private final EntityManager entityManager;
 
     private int chunkSize;
 
@@ -129,12 +131,14 @@ public class N1JpaPaging2JobConfig {
     @Bean
     @StepScope
     public QuerydslPagingItemV2Reader<Store> reader(@Value("#{jobParameters[address]}") final String address) {
-        return new QuerydslPagingItemV2Reader<>(entityManagerFactory, chunkSize, queryFactory -> {
+        final var querydslPagingItemV2Reader = new QuerydslPagingItemV2Reader<Store>(
+            entityManagerFactory, chunkSize, queryFactory -> {
             // 요청 시간 기준으로 만료 기간이 지났지만, "적립" 포인트가 남아있는 경우 조회
             return queryFactory
                 .selectFrom(QStore.store)
                 .where(QStore.store.address.like(address + "%"));
         });
+        return querydslPagingItemV2Reader;
     }
 
     // QuerydslCursorItemReader
@@ -171,6 +175,12 @@ public class N1JpaPaging2JobConfig {
     @StepScope
     public ItemProcessor<Store, StoreHistory> processor() {
         return item -> {
+            log.info("entityManager.isOpen()={}", entityManager.isOpen());
+            log.info("entityManager.contains(item)={}", entityManager.contains(item));
+
+//            QuerydslPagingItemV2Reader.entityManager.close();
+            log.info("QuerydslPagingItemV2Reader.entityManager.isOpen()={}", QuerydslPagingItemV2Reader.entityManager.isOpen());
+            log.info("QuerydslPagingItemV2Reader.entityManager.contains={}", QuerydslPagingItemV2Reader.entityManager.contains(item));
             final var storeHistory = new StoreHistory(item, item.getProducts(),
                 item.getEmployees());
             log.info("storeHistory={}", storeHistory);

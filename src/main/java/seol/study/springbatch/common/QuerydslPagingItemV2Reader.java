@@ -20,7 +20,7 @@ public class QuerydslPagingItemV2Reader<T> extends AbstractPagingItemReader<T> {
 
     protected final Map<String, Object> jpaPropertyMap = new HashMap<>();
     protected EntityManagerFactory entityManagerFactory;
-    protected EntityManager entityManager;
+    public static EntityManager entityManager;
     protected Function<JPAQueryFactory, JPAQuery<T>> queryFunction;
     protected boolean transacted = true; // default value
 
@@ -136,4 +136,5 @@ public class QuerydslPagingItemV2Reader<T> extends AbstractPagingItemReader<T> {
         entityManager.close();
         super.doClose();
     }
+
 }

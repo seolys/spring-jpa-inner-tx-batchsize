@@ -22,12 +22,12 @@ public class Store {
     private String name;
     private String address;
 
-    @OneToMany(mappedBy = "store", cascade = ALL)
-//    @OneToMany(mappedBy = "store", cascade = ALL, fetch = FetchType.LAZY)
+//    @OneToMany(mappedBy = "store", cascade = ALL)
+    @OneToMany(mappedBy = "store", cascade = ALL, fetch = FetchType.LAZY)
     private List<Product> products = new ArrayList<>();
 
-    @OneToMany(mappedBy = "store", cascade = ALL)
-//    @OneToMany(mappedBy = "store", cascade = ALL, fetch = FetchType.LAZY)
+//    @OneToMany(mappedBy = "store", cascade = ALL)
+    @OneToMany(mappedBy = "store", cascade = ALL, fetch = FetchType.LAZY)
     private List<Employee> employees = new ArrayList<>();
 
     public Store(final String name, final String address) {

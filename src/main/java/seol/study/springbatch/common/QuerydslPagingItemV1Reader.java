@@ -103,4 +103,8 @@ public class QuerydslPagingItemV1Reader<T> extends AbstractPagingItemReader<T> {
         entityManager.close();
         super.doClose();
     }
+
+    public EntityManager getEntityManager() {
+        return entityManager;
+    }
 }

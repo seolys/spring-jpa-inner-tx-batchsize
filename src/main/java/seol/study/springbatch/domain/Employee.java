@@ -18,7 +18,7 @@ public class Employee {
     private String name;
     private LocalDate hireDate;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", foreignKey = @ForeignKey(name = "FK_EMPLOYEE_STORE"))
     private Store store;
 

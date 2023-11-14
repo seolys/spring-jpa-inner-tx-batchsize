@@ -17,7 +17,7 @@ public class Product {
     private String name;
     private long price;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", foreignKey = @ForeignKey(name = "FK_PRODUCT_STORE"))
     private Store store;
 

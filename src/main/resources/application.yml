@@ -16,6 +16,7 @@ spring:
         order_updates: true
         query:
           in_clause_parameter_padding: true
+    open-in-view: false
   output:
     ansi:
       enabled: always
