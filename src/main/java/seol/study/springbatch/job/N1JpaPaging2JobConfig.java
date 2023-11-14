@@ -1,6 +1,8 @@
 package seol.study.springbatch.job;
 
+import javax.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
@@ -9,23 +11,21 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.database.JpaItemWriter;
-import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.batch.item.database.builder.JpaItemWriterBuilder;
-import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import seol.study.springbatch.common.QuerydslPagingItemV1Reader;
+import seol.study.springbatch.common.QuerydslPagingItemV2Reader;
+import seol.study.springbatch.domain.QStore;
 import seol.study.springbatch.domain.Store;
 import seol.study.springbatch.domain.StoreHistory;
 import seol.study.springbatch.domain.StoreWriteService;
 
-import javax.persistence.EntityManagerFactory;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
-
+@Slf4j
 @RequiredArgsConstructor
 @Configuration
 @ConditionalOnProperty(name = "job.name", havingValue = N1JpaPaging2JobConfig.JOB_NAME)
@@ -76,24 +76,24 @@ public class N1JpaPaging2JobConfig {
     }
 
     // JpaPagingItemReader
-    @Bean(name = JOB_NAME + "_reader")
-    @StepScope
-    public JpaPagingItemReader<Store> reader(
-            @Value("#{jobParameters[address]}") final String address) {
-
-        final Map<String, Object> parameters = new LinkedHashMap<>();
-//        parameters.put("address", address + "%");
-        parameters.put("address", "서울" + "%");
-
-        return new JpaPagingItemReaderBuilder<Store>()
-                .pageSize(chunkSize)
-                .parameterValues(parameters)
-                .queryString("SELECT s FROM Store s WHERE s.address LIKE :address order by s.id")
-                .entityManagerFactory(entityManagerFactory)
-                .name(JOB_NAME + "_reader")
-                .transacted(true)
-                .build();
-    }
+//    @Bean(name = JOB_NAME + "_reader")
+//    @StepScope
+//    public JpaPagingItemReader<Store> reader(
+//            @Value("#{jobParameters[address]}") final String address) {
+//
+//        final Map<String, Object> parameters = new LinkedHashMap<>();
+////        parameters.put("address", address + "%");
+//        parameters.put("address", "서울" + "%");
+//
+//        return new JpaPagingItemReaderBuilder<Store>()
+//                .pageSize(chunkSize)
+//                .parameterValues(parameters)
+//                .queryString("SELECT s FROM Store s WHERE s.address LIKE :address order by s.id")
+//                .entityManagerFactory(entityManagerFactory)
+//                .name(JOB_NAME + "_reader")
+//                .transacted(true)
+//                .build();
+//    }
 
     // JpaPagingFetchItemReader
 //    @Bean
@@ -113,17 +113,29 @@ public class N1JpaPaging2JobConfig {
 //        return reader;
 //    }
 
-    // QuerydslPagingItemReader
+    // QuerydslPagingItemV1Reader
 //    @Bean
 //    @StepScope
-//    public QuerydslPagingItemReader<Store> reader(@Value("#{jobParameters[address]}") final String address) {
-//        return new QuerydslPagingItemReader<>(entityManagerFactory, chunkSize, queryFactory -> {
+//    public QuerydslPagingItemV1Reader<Store> reader(@Value("#{jobParameters[address]}") final String address) {
+//        return new QuerydslPagingItemV1Reader<>(entityManagerFactory, chunkSize, queryFactory -> {
 //            // 요청 시간 기준으로 만료 기간이 지났지만, "적립" 포인트가 남아있는 경우 조회
 //            return queryFactory
 //                    .selectFrom(QStore.store)
 //                    .where(QStore.store.address.like(address + "%"));
 //        });
 //    }
+
+    // QuerydslPagingItemV2Reader
+    @Bean
+    @StepScope
+    public QuerydslPagingItemV2Reader<Store> reader(@Value("#{jobParameters[address]}") final String address) {
+        return new QuerydslPagingItemV2Reader<>(entityManagerFactory, chunkSize, queryFactory -> {
+            // 요청 시간 기준으로 만료 기간이 지났지만, "적립" 포인트가 남아있는 경우 조회
+            return queryFactory
+                .selectFrom(QStore.store)
+                .where(QStore.store.address.like(address + "%"));
+        });
+    }
 
     // QuerydslCursorItemReader
 //    @Bean
@@ -158,7 +170,12 @@ public class N1JpaPaging2JobConfig {
     @Bean(name = JOB_NAME + "_processor")
     @StepScope
     public ItemProcessor<Store, StoreHistory> processor() {
-        return item -> new StoreHistory(item, item.getProducts(), item.getEmployees());
+        return item -> {
+            final var storeHistory = new StoreHistory(item, item.getProducts(),
+                item.getEmployees());
+            log.info("storeHistory={}", storeHistory);
+            return storeHistory;
+        };
     }
 
     public JpaItemWriter<StoreHistory> writer() {
@@ -166,4 +183,5 @@ public class N1JpaPaging2JobConfig {
                 .entityManagerFactory(entityManagerFactory)
                 .build();
     }
+
 }

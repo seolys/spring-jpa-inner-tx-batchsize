@@ -2,19 +2,21 @@ package seol.study.springbatch.common;
 
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import org.springframework.batch.item.database.AbstractPagingItemReader;
-import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.util.ClassUtils;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import org.springframework.batch.item.database.AbstractPagingItemReader;
+import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.util.ClassUtils;
 
-public class QuerydslPagingItemReader<T> extends AbstractPagingItemReader<T> {
+/**
+ * QuerydslPagingItemReader 블로그 버전.
+ */
+public class QuerydslPagingItemV1Reader<T> extends AbstractPagingItemReader<T> {
 
     private EntityManagerFactory entityManagerFactory;
     private final Map<String, Object> jpaPropertyMap = new HashMap<>();
@@ -29,11 +31,11 @@ public class QuerydslPagingItemReader<T> extends AbstractPagingItemReader<T> {
         this.transacted = transacted;
     }
 
-    private QuerydslPagingItemReader() {
-        setName(ClassUtils.getShortName(QuerydslPagingItemReader.class));
+    private QuerydslPagingItemV1Reader() {
+        setName(ClassUtils.getShortName(QuerydslPagingItemV1Reader.class));
     }
 
-    public QuerydslPagingItemReader(final EntityManagerFactory entityManagerFactory, final int pageSize, final Function<JPAQueryFactory, JPAQuery<T>> queryFunction) {
+    public QuerydslPagingItemV1Reader(final EntityManagerFactory entityManagerFactory, final int pageSize, final Function<JPAQueryFactory, JPAQuery<T>> queryFunction) {
         this();
         setEntityManagerFactory(entityManagerFactory);
         setQuery(queryFunction);
