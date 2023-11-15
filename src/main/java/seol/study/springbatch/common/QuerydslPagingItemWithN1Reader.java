@@ -16,7 +16,10 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
-public class QuerydslPagingItemV2Reader<T> extends AbstractPagingItemReader<T> {
+/**
+ * Reader에서 생성한 트랜잭션에 commit();을 호출하는 버전.
+ */
+public class QuerydslPagingItemWithN1Reader<T> extends AbstractPagingItemReader<T> {
 
     protected final Map<String, Object> jpaPropertyMap = new HashMap<>();
     protected EntityManagerFactory entityManagerFactory;
@@ -24,17 +27,17 @@ public class QuerydslPagingItemV2Reader<T> extends AbstractPagingItemReader<T> {
     protected Function<JPAQueryFactory, JPAQuery<T>> queryFunction;
     protected boolean transacted = true; // default value
 
-    protected QuerydslPagingItemV2Reader() {
-        setName(ClassUtils.getShortName(QuerydslPagingItemV2Reader.class));
+    protected QuerydslPagingItemWithN1Reader() {
+        setName(ClassUtils.getShortName(QuerydslPagingItemWithN1Reader.class));
     }
 
-    public QuerydslPagingItemV2Reader(EntityManagerFactory entityManagerFactory,
+    public QuerydslPagingItemWithN1Reader(EntityManagerFactory entityManagerFactory,
                                     int pageSize,
                                     Function<JPAQueryFactory, JPAQuery<T>> queryFunction) {
         this(entityManagerFactory, pageSize, true, queryFunction);
     }
 
-    public QuerydslPagingItemV2Reader(EntityManagerFactory entityManagerFactory,
+    public QuerydslPagingItemWithN1Reader(EntityManagerFactory entityManagerFactory,
                                     int pageSize,
                                     boolean transacted,
                                     Function<JPAQueryFactory, JPAQuery<T>> queryFunction) {

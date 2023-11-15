@@ -1,5 +1,6 @@
 package seol.study.springbatch.job;
 
+import java.util.Objects;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import seol.study.springbatch.common.QuerydslPagingItemV1Reader;
-import seol.study.springbatch.common.QuerydslPagingItemV2Reader;
+import seol.study.springbatch.common.QuerydslPagingItemBatchSizeReader;
+import seol.study.springbatch.common.QuerydslPagingItemWithN1Reader;
 import seol.study.springbatch.domain.QStore;
 import seol.study.springbatch.domain.Store;
 import seol.study.springbatch.domain.StoreHistory;
@@ -70,7 +71,8 @@ public class N1JpaPaging2JobConfig {
     public Step step() {
         return stepBuilderFactory.get(JOB_NAME + "_step")
                 .<Store, StoreHistory>chunk(chunkSize)
-                .reader(reader(null))
+                .reader(getAppliedBatchSizeReader(null))
+//                .reader(getN1Reader(null))
                 .processor(processor())
                 .writer(writer())
                 .allowStartIfComplete(true)
@@ -116,22 +118,22 @@ public class N1JpaPaging2JobConfig {
 //    }
 
     // QuerydslPagingItemV1Reader
-//    @Bean
-//    @StepScope
-//    public QuerydslPagingItemV1Reader<Store> reader(@Value("#{jobParameters[address]}") final String address) {
-//        return new QuerydslPagingItemV1Reader<>(entityManagerFactory, chunkSize, queryFactory -> {
-//            // 요청 시간 기준으로 만료 기간이 지났지만, "적립" 포인트가 남아있는 경우 조회
-//            return queryFactory
-//                    .selectFrom(QStore.store)
-//                    .where(QStore.store.address.like(address + "%"));
-//        });
-//    }
+    @Bean(name = JOB_NAME + "BatchSizeReader")
+    @StepScope
+    public QuerydslPagingItemBatchSizeReader<Store> getAppliedBatchSizeReader(@Value("#{jobParameters[address]}") final String address) {
+        return new QuerydslPagingItemBatchSizeReader<>(entityManagerFactory, chunkSize, queryFactory -> {
+            // 요청 시간 기준으로 만료 기간이 지났지만, "적립" 포인트가 남아있는 경우 조회
+            return queryFactory
+                    .selectFrom(QStore.store)
+                    .where(QStore.store.address.like(address + "%"));
+        });
+    }
 
     // QuerydslPagingItemV2Reader
-    @Bean
+    @Bean(name = JOB_NAME + "N1Reader")
     @StepScope
-    public QuerydslPagingItemV2Reader<Store> reader(@Value("#{jobParameters[address]}") final String address) {
-        final var querydslPagingItemV2Reader = new QuerydslPagingItemV2Reader<Store>(
+    public QuerydslPagingItemWithN1Reader<Store> getN1Reader(@Value("#{jobParameters[address]}") final String address) {
+        final var querydslPagingItemV2Reader = new QuerydslPagingItemWithN1Reader<Store>(
             entityManagerFactory, chunkSize, queryFactory -> {
             // 요청 시간 기준으로 만료 기간이 지났지만, "적립" 포인트가 남아있는 경우 조회
             return queryFactory
@@ -178,9 +180,11 @@ public class N1JpaPaging2JobConfig {
             log.info("entityManager.isOpen()={}", entityManager.isOpen());
             log.info("entityManager.contains(item)={}", entityManager.contains(item));
 
+            if(Objects.nonNull(QuerydslPagingItemWithN1Reader.entityManager)) {
 //            QuerydslPagingItemV2Reader.entityManager.close();
-            log.info("QuerydslPagingItemV2Reader.entityManager.isOpen()={}", QuerydslPagingItemV2Reader.entityManager.isOpen());
-            log.info("QuerydslPagingItemV2Reader.entityManager.contains={}", QuerydslPagingItemV2Reader.entityManager.contains(item));
+//            log.info("QuerydslPagingItemV2Reader.entityManager.isOpen()={}", QuerydslPagingItemV2Reader.entityManager.isOpen());
+//            log.info("QuerydslPagingItemV2Reader.entityManager.contains={}", QuerydslPagingItemV2Reader.entityManager.contains(item));
+            }
             final var storeHistory = new StoreHistory(item, item.getProducts(),
                 item.getEmployees());
             log.info("storeHistory={}", storeHistory);
